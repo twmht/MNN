@@ -18,10 +18,12 @@
 #include "Profiler.hpp"
 #include "Tensor.hpp"
 #include "revertMNNModel.hpp"
+#include <dlfcn.h>
 
 using namespace MNN;
 
 int main(int argc, const char* argv[]) {
+    auto handle = dlopen("source/backend/opencl/libMNN_CL.so", RTLD_NOW);
     std::string cmd = argv[0];
     std::string pwd = "./";
     auto rslash     = cmd.rfind("/");
@@ -82,38 +84,38 @@ int main(int argc, const char* argv[]) {
     config.type           = type;
     MNN::Session* session = NULL;
     session               = net->createSession(config);
-    auto inputTensor      = net->getSessionInput(session, NULL);
-    if (!inputDims.empty()) {
-        net->resizeTensor(inputTensor, inputDims);
-        net->resizeSession(session);
-    }
-    net->releaseModel();
-    std::shared_ptr<MNN::Tensor> inputTensorUser(MNN::Tensor::createHostTensorFromDevice(inputTensor, false));
-    auto outputTensor = net->getSessionOutput(session, NULL);
-    if (outputTensor->size() <= 0) {
-        MNN_ERROR("Output not available\n");
-        return 0;
-    }
-    std::shared_ptr<MNN::Tensor> outputTensorUser(MNN::Tensor::createHostTensorFromDevice(outputTensor, false));
+    // auto inputTensor      = net->getSessionInput(session, NULL);
+    // if (!inputDims.empty()) {
+        // net->resizeTensor(inputTensor, inputDims);
+        // net->resizeSession(session);
+    // }
+    // net->releaseModel();
+    // std::shared_ptr<MNN::Tensor> inputTensorUser(MNN::Tensor::createHostTensorFromDevice(inputTensor, false));
+    // auto outputTensor = net->getSessionOutput(session, NULL);
+    // if (outputTensor->size() <= 0) {
+        // MNN_ERROR("Output not available\n");
+        // return 0;
+    // }
+    // std::shared_ptr<MNN::Tensor> outputTensorUser(MNN::Tensor::createHostTensorFromDevice(outputTensor, false));
 
-    auto profiler      = MNN::Profiler::getInstance();
-    auto beginCallBack = [&](const std::vector<Tensor*>& inputs, const OperatorInfo* info) {
-        profiler->start(info);
-        return true;
-    };
-    auto afterCallBack = [&](const std::vector<Tensor*>& inputs, const OperatorInfo* info) {
-        profiler->end(info);
-        return true;
-    };
+    // auto profiler      = MNN::Profiler::getInstance();
+    // auto beginCallBack = [&](const std::vector<Tensor*>& inputs, const OperatorInfo* info) {
+        // profiler->start(info);
+        // return true;
+    // };
+    // auto afterCallBack = [&](const std::vector<Tensor*>& inputs, const OperatorInfo* info) {
+        // profiler->end(info);
+        // return true;
+    // };
 
-    AUTOTIME;
-    // just run
-    for (int i = 0; i < runTime; ++i) {
-        inputTensor->copyFromHostTensor(inputTensorUser.get());
-        net->runSessionWithCallBackInfo(session, beginCallBack, afterCallBack);
-        outputTensor->copyToHostTensor(outputTensorUser.get());
-    }
+    // AUTOTIME;
+    // // just run
+    // for (int i = 0; i < runTime; ++i) {
+        // inputTensor->copyFromHostTensor(inputTensorUser.get());
+        // net->runSessionWithCallBackInfo(session, beginCallBack, afterCallBack);
+        // outputTensor->copyToHostTensor(outputTensorUser.get());
+    // }
 
-    profiler->printTimeByType(runTime);
+    // profiler->printTimeByType(runTime, "name");
     return 0;
 }

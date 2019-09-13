@@ -23,7 +23,7 @@ target_link_libraries(getPerformance.out ${MNN_DEPEND})
 # include converter's MNN_generated.h
 include_directories(..)
 add_executable(timeProfile.out timeProfile.cpp revertMNNModel.cpp Profiler.hpp Profiler.cpp)
-target_link_libraries(timeProfile.out ${MNN_DEPEND})
+target_link_libraries(timeProfile.out ${MNN_DEPEND} dl)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     add_executable(checkDir.out checkDir.cpp)

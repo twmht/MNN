@@ -40,7 +40,7 @@ public:
      * print profiler time result grouped and sorter by type.
      * @param loops     loop count.
      */
-    void printTimeByType(int loops = 1);
+    void printTimeByType(int loops = 1, std::string what="type");
 
 private:
     ~Profiler() = default;
@@ -62,9 +62,11 @@ private:
     float mTotalTime    = 0.0f;
     float mTotalMFlops  = 0.0f;
     std::map<std::string, Record> mMapByType;
+    std::map<std::string, Record> mMapByName;
 
 private:
     Record& getTypedRecord(const OperatorInfo* info);
+    Record& getNamedRecord(const OperatorInfo* info);
 };
 
 } // namespace MNN

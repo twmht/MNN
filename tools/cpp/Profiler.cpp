@@ -18,6 +18,7 @@
 #endif
 #include "Profiler.hpp"
 #include "Macro.h"
+// #include "logkit.h"
 
 #define MFLOPS (1e6)
 
@@ -82,18 +83,43 @@ Profiler::Record& Profiler::getTypedRecord(const OperatorInfo* op) {
     return record;
 }
 
+Profiler::Record& Profiler::getNamedRecord(const OperatorInfo* op) {
+    auto name = op->name();
+    auto iter = mMapByName.find(name);
+    if (iter != mMapByName.end()) {
+        return iter->second;
+    }
+
+    // create new
+    mMapByName.insert(std::make_pair(name, Record()));
+    Record& record     = mMapByName.find(name)->second;
+    record.costTime    = 0.0f;
+    record.calledTimes = 0;
+    record.order       = mOrder++;
+    record.type        = op->type();
+    record.name        = name;
+    record.flops       = 0.0f;
+
+    return record;
+}
+
 void Profiler::start(const OperatorInfo* info) {
     mStartTime = getTime();
     mTotalMFlops += info->flops();
     auto& typed = getTypedRecord(info);
+    auto& named = getNamedRecord(info);
     typed.calledTimes++;
+    named.calledTimes++;
     typed.flops += info->flops();
+    named.flops += info->flops();
+    printf("execute %s\n", info->name().c_str());
 }
 
 void Profiler::end(const OperatorInfo* info) {
     mEndTime   = getTime();
     float cost = (float)(mEndTime - mStartTime) / 1000.0f;
     mMapByType[info->type()].costTime += cost;
+    mMapByName[info->name()].costTime += cost;
     mTotalTime += cost;
 }
 
@@ -130,10 +156,14 @@ static void printTable(const char* title, const std::vector<std::string>& header
     }
 }
 
-void Profiler::printTimeByType(int loops) {
+void Profiler::printTimeByType(int loops, std::string what) {
+    std::map<std::string, Record> records = mMapByType;
+    if (what == "name") {
+      records = mMapByName;
+    }
     // sort by type
     std::vector<std::pair<float, std::string>> sorted;
-    for (auto iter : mMapByType) {
+    for (auto iter : records) {
         sorted.push_back(std::make_pair(iter.second.costTime, iter.first));
     }
     std::sort(sorted.begin(), sorted.end());
@@ -142,7 +172,7 @@ void Profiler::printTimeByType(int loops) {
     const std::vector<std::string> header = {"Node Type", "Avg(ms)", "%", "Called times", "Flops Rate"};
     std::vector<std::vector<std::string>> rows;
     for (auto iter : sorted) {
-        auto record = mMapByType.find(iter.second)->second;
+        auto record = records.find(iter.second)->second;
         std::vector<std::string> columns;
         columns.push_back(iter.second);
         columns.push_back(toString(record.costTime / (float)loops));

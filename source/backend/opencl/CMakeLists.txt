@@ -25,6 +25,7 @@ target_include_directories(MNN_CL PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty
 )
 
+add_definitions(-DLOG_VERBOSE)
 if (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     add_definitions(-DMNN_USE_OPENCL_WRAPPER)
     #add_definitions(-DENABLE_OPENCL_TURNING_PROFILER)
