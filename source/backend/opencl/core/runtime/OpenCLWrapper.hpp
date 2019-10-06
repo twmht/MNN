@@ -85,6 +85,8 @@ public:
     using clEnqueueMapImageFunc    = void *(*)(cl_command_queue, cl_mem, cl_bool, cl_map_flags, const size_t *,
                                             const size_t *, size_t *, size_t *, cl_uint, const cl_event *, cl_event *,
                                             cl_int *);
+    using clEnqueueReadImageFunc    = cl_int (*)(cl_command_queue, cl_mem, cl_bool, const size_t * , const size_t*, size_t, size_t, void*, cl_uint, const cl_event*, cl_event*);
+
     using clCreateCommandQueueFunc = cl_command_queue(CL_API_CALL *)( // NOLINT
         cl_context, cl_device_id, cl_command_queue_properties, cl_int *);
     using clReleaseCommandQueueFunc     = cl_int (*)(cl_command_queue);
@@ -149,6 +151,7 @@ public:
     MNN_CL_DEFINE_FUNC_PTR(clRetainProgram);
     MNN_CL_DEFINE_FUNC_PTR(clGetProgramBuildInfo);
     MNN_CL_DEFINE_FUNC_PTR(clEnqueueReadBuffer);
+    MNN_CL_DEFINE_FUNC_PTR(clEnqueueReadImage);
     MNN_CL_DEFINE_FUNC_PTR(clEnqueueWriteBuffer);
     MNN_CL_DEFINE_FUNC_PTR(clWaitForEvents);
     MNN_CL_DEFINE_FUNC_PTR(clReleaseEvent);

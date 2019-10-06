@@ -106,6 +106,7 @@ bool OpenCLSymbols::LoadLibraryFromPath(const std::string &library_path) {
     MNN_LOAD_FUNCTION_PTR(clCreateCommandQueue);
     MNN_LOAD_FUNCTION_PTR(clReleaseCommandQueue);
     MNN_LOAD_FUNCTION_PTR(clEnqueueMapBuffer);
+    MNN_LOAD_FUNCTION_PTR(clEnqueueReadImage);
     MNN_LOAD_FUNCTION_PTR(clEnqueueMapImage);
     MNN_LOAD_FUNCTION_PTR(clRetainProgram);
     MNN_LOAD_FUNCTION_PTR(clGetProgramBuildInfo);
@@ -394,6 +395,12 @@ void *clEnqueueMapImage(cl_command_queue command_queue, cl_mem image, cl_bool bl
     MNN_CHECK_NOTNULL(func);
     return func(command_queue, image, blocking_map, map_flags, origin, region, image_row_pitch, image_slice_pitch,
                 num_events_in_wait_list, event_wait_list, event, errcode_ret);
+}
+
+cl_int clEnqueueReadImage(cl_command_queue command_queue, cl_mem image, cl_bool blocking, const size_t* origin, const size_t *region, size_t row_pitch, size_t slice_pitch, void* ptr, cl_uint num_events_in_wait_list, const cl_event* events, cl_event* event) {
+    auto func = MNN::OpenCLSymbolsOperator::getOpenclSymbolsPtr()->clEnqueueReadImage;
+    MNN_CHECK_NOTNULL(func);
+    return func(command_queue, image, blocking, origin, region, row_pitch, slice_pitch, ptr, num_events_in_wait_list, events, event);
 }
 
 cl_int clEnqueueUnmapMemObject(cl_command_queue command_queue, cl_mem memobj, void *mapped_ptr,

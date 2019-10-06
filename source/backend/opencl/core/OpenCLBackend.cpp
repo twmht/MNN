@@ -265,39 +265,52 @@ void OpenCLBackend::onCopyBuffer(const Tensor* srcTensor, const Tensor* dstTenso
 #endif
     // OpenCL -> Host
 
-    auto needSize = dstTensor->size();
-    _allocHostBuffer(needSize);
-    interBuffer.buffer().device = (uint64_t)mHostBuffer.second.get();
+    auto image = (cl::Image*)srcTensor->deviceId();
+    std::array<unsigned int, 3> origin;
+    origin[0] = 0;
+    origin[1] = 0;
+    origin[2] = 0;
+    std::array<unsigned int, 3> region;
+    region[0] = srcTensor->width();
+    region[1] = srcTensor->height();
+    region[2] = srcTensor->channel();
+    auto hostPtr = dstTensor->host<float>() ;
+    mOpenCLRuntime->commandQueue().enqueueReadImage(*image, true, origin, region, 0, 0, hostPtr);
+    // clEnqueueReadImage(mOpenCLRuntime->commandQueue(), *image, true, origin, region, 0, 0, hostPtr, 0, nullptr, nullptr);
 
-    MNN_DATA_FORMAT data_format = TensorUtils::getDescribe(dstTensor)->dimensionFormat;
-    switch (data_format) {
-        case MNN_DATA_FORMAT_NHWC:
-            OpenCL::convertImageToNHWCBuffer(srcTensor, &interBuffer,
-                                             *const_cast<cl::Kernel*>(&mImageToNHWCBufferFloat), mOpenCLRuntime.get());
-            break;
-        case MNN_DATA_FORMAT_NCHW:
-            OpenCL::convertImageToNCHWBuffer(srcTensor, &interBuffer,
-                                             *const_cast<cl::Kernel*>(&mImageToNCHWBufferFloat), mOpenCLRuntime.get());
-            break;
-        case MNN_DATA_FORMAT_NC4HW4:
-            OpenCL::convertImageToNC4HW4Buffer(
-                srcTensor, &interBuffer, *const_cast<cl::Kernel*>(&mImageToNC4HW4BufferFloat), mOpenCLRuntime.get());
-            break;
-        default:
-            break;
-    }
-    auto hostPtr = dstTensor->host<float>();
-    cl_int error                = CL_SUCCESS;
-    auto bufferPtr =
-        mOpenCLRuntime->commandQueue().enqueueMapBuffer(*mHostBuffer.second, true, CL_MAP_READ, 0, needSize, nullptr, nullptr, &error);
-    if (error != CL_SUCCESS) {
-        MNN_ERROR("Error to map buffer in copy buffer, error=%d\n", error);
-        return;
-    }
-    if(bufferPtr != nullptr && hostPtr != nullptr){
-        ::memcpy(hostPtr, bufferPtr, needSize);
-    }
-    mOpenCLRuntime->commandQueue().enqueueUnmapMemObject(*mHostBuffer.second, bufferPtr);
+    // auto needSize = dstTensor->size();
+    // _allocHostBuffer(needSize);
+    // interBuffer.buffer().device = (uint64_t)mHostBuffer.second.get();
+
+    // MNN_DATA_FORMAT data_format = TensorUtils::getDescribe(dstTensor)->dimensionFormat;
+    // switch (data_format) {
+        // case MNN_DATA_FORMAT_NHWC:
+            // OpenCL::convertImageToNHWCBuffer(srcTensor, &interBuffer,
+                                             // *const_cast<cl::Kernel*>(&mImageToNHWCBufferFloat), mOpenCLRuntime.get());
+            // break;
+        // case MNN_DATA_FORMAT_NCHW:
+            // OpenCL::convertImageToNCHWBuffer(srcTensor, &interBuffer,
+                                             // *const_cast<cl::Kernel*>(&mImageToNCHWBufferFloat), mOpenCLRuntime.get());
+            // break;
+        // case MNN_DATA_FORMAT_NC4HW4:
+            // OpenCL::convertImageToNC4HW4Buffer(
+                // srcTensor, &interBuffer, *const_cast<cl::Kernel*>(&mImageToNC4HW4BufferFloat), mOpenCLRuntime.get());
+            // break;
+        // default:
+            // break;
+    // }
+    // auto hostPtr = dstTensor->host<float>();
+    // cl_int error                = CL_SUCCESS;
+    // auto bufferPtr =
+        // mOpenCLRuntime->commandQueue().enqueueMapBuffer(*mHostBuffer.second, true, CL_MAP_READ, 0, needSize, nullptr, nullptr, &error);
+    // if (error != CL_SUCCESS) {
+        // MNN_ERROR("Error to map buffer in copy buffer, error=%d\n", error);
+        // return;
+    // }
+    // if(bufferPtr != nullptr && hostPtr != nullptr){
+        // ::memcpy(hostPtr, bufferPtr, needSize);
+    // }
+    // mOpenCLRuntime->commandQueue().enqueueUnmapMemObject(*mHostBuffer.second, bufferPtr);
 
 #ifdef LOG_VERBOSE
     MNN_PRINT("end onCopyBuffer !\n");
